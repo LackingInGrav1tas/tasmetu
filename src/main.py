@@ -1,6 +1,7 @@
 import pyaudio
 import wave
 import numpy as np
+from datetime import datetime
 
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
@@ -12,12 +13,6 @@ p = pyaudio.PyAudio()
 
 stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
-# output file
-wf = wave.open('output.wav', 'wb')
-wf.setnchannels(CHANNELS)
-wf.setsampwidth(p.get_sample_size(FORMAT))
-wf.setframerate(RATE)
-
 while True:
     print("waiting")
     data = stream.read(CHUNK)
@@ -25,6 +20,12 @@ while True:
     volume = np.abs(audio_data).mean()
     
     if volume >= THRESHOLD:
+
+        # output file
+        wf = wave.open(str(datetime.now()).replace(':', '.') + '.wav', 'wb')
+        wf.setnchannels(CHANNELS)
+        wf.setsampwidth(p.get_sample_size(FORMAT))
+        wf.setframerate(RATE)
 
         elapsed_silence = 0
 
