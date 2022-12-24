@@ -3,7 +3,6 @@ import wave
 import numpy as np
 from datetime import datetime
 import speech_recognition as sr
-import matplotlib.pyplot as plt
 
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
@@ -11,12 +10,6 @@ CHANNELS = 1
 RATE = 44100
 THRESHOLD = 200
 
-x = [ i for i in range(50)]
-y = [ 0 for i in range(50) ]
-
-plt.figure(num="Audio Stream")
-plt.title("Audio Stream", color="white", weight=700)
-plt.ylim([0, 3000])
 p = pyaudio.PyAudio()
 
 stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
@@ -28,11 +21,6 @@ while True:
     data = stream.read(CHUNK)
     audio_data = np.frombuffer(data, dtype=np.int16)
     volume = np.abs(audio_data).mean()
-
-    plt.clf()
-    y = y[1:]
-    y.append(volume)
-    plt.plot(x, y)
     
     if volume >= THRESHOLD:
         elapsed_silence = 0
@@ -55,7 +43,7 @@ while True:
         wf.writeframes(data)
 
         if volume < THRESHOLD:
-            if elapsed_silence > 50:
+            if elapsed_silence > 100:
                 print("done")
                 recording = False
                 elapsed_silence = 0
