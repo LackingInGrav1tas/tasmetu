@@ -25,7 +25,9 @@ while True:
 
             # output file
             name = str(datetime.now()).replace(':', '.')
-            wf = wave.open(name + '.wav', 'wb')
+            audio_file = 'data/' + name + '.wav'
+
+            wf = wave.open(audio_file, 'wb')
             wf.setnchannels(CHANNELS)
             wf.setsampwidth(p.get_sample_size(FORMAT))
             wf.setframerate(RATE)
@@ -47,9 +49,9 @@ while True:
 
             # transcription
             r = sr.Recognizer()
-            with sr.AudioFile(name + '.wav') as source:
+            with sr.AudioFile(audio_file) as source:
                 audio = r.record(source)
-                f = open(name + '.txt', 'a')
+                f = open('data/' + name + '.txt', 'a')
                 transcription = str(r.recognize_google(audio))
                 f.write(transcription)
                 f.close()
