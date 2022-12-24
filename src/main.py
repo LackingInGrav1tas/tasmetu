@@ -21,8 +21,10 @@ p = pyaudio.PyAudio()
 
 stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
+recording = False
+elapsed_silence = 0
+
 while True:
-    print("waiting")
     data = stream.read(CHUNK)
     audio_data = np.frombuffer(data, dtype=np.int16)
     volume = np.abs(audio_data).mean()
@@ -31,54 +33,50 @@ while True:
     y = y[1:]
     y.append(volume)
     plt.plot(x, y)
-    plt.pause(0.01)
     
     if volume >= THRESHOLD:
-
-        # output file
-        name = str(datetime.now()).replace(':', '.')
-        audio_file = 'data/' + name + '.wav'
-
-        wf = wave.open(audio_file, 'wb')
-        wf.setnchannels(CHANNELS)
-        wf.setsampwidth(p.get_sample_size(FORMAT))
-        wf.setframerate(RATE)
-
         elapsed_silence = 0
 
-        while volume >= THRESHOLD or elapsed_silence <= 150: # elapsed silence allows for about 3 seconds of silence before stopping recording
-            print("recording")
-            data = stream.read(CHUNK)
-            audio_data = np.frombuffer(data, dtype=np.int16)
-            volume = np.abs(audio_data).mean()
+        if not recording:
+            # output file
+            name = str(datetime.now()).replace(':', '.')
+            audio_file = 'data/' + name + '.wav'
 
-            plt.clf()
-            y = y[1:]
-            y.append(volume)
-            plt.plot(x, y)
-            plt.pause(0.01)
+            wf = wave.open(audio_file, 'wb')
+            wf.setnchannels(CHANNELS)
+            wf.setsampwidth(p.get_sample_size(FORMAT))
+            wf.setframerate(RATE)
 
-            if volume < THRESHOLD: elapsed_silence += 1
-            else: elapsed_silence = 0
+        recording = True
 
-            wf.writeframes(data)
+    if recording:
+        print(f"recording {elapsed_silence}")
+        
+        wf.writeframes(data)
 
-        wf.close()
+        if volume < THRESHOLD:
+            if elapsed_silence > 50:
+                print("done")
+                recording = False
+                elapsed_silence = 0
+                wf.close()
 
-        # transcription
-        r = sr.Recognizer()
-        with sr.AudioFile(audio_file) as source:
-            audio = r.record(source)
-            f = open('data/' + name + '.txt', 'a')
-            try:
-                transcription = str(r.recognize_google(audio))
-            except:
-                print("unrecognized")
-                transcription = "unrecognized"
-            f.write(transcription)
-            f.close()
+                # transcription
+                r = sr.Recognizer()
+                with sr.AudioFile(audio_file) as source:
+                    audio = r.record(source)
+                    f = open('data/' + name + '.txt', 'a')
+                    try:
+                        transcription = str(r.recognize_google(audio))
+                    except:
+                        print("unrecognized")
+                        transcription = "unrecognized"
+                    f.write(transcription)
+                    f.close()
 
-            if 'stop program' in transcription: break    
+                    if 'stop program' in transcription: break 
+            else:
+                elapsed_silence += 1
 
 
 stream.stop_stream()
