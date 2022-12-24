@@ -2,6 +2,7 @@ import pyaudio
 import wave
 import numpy as np
 from datetime import datetime
+import speech_recognition as sr
 
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
@@ -22,7 +23,8 @@ while True:
     if volume >= THRESHOLD:
 
         # output file
-        wf = wave.open(str(datetime.now()).replace(':', '.') + '.wav', 'wb')
+        name = str(datetime.now()).replace(':', '.')
+        wf = wave.open(name + '.wav', 'wb')
         wf.setnchannels(CHANNELS)
         wf.setsampwidth(p.get_sample_size(FORMAT))
         wf.setframerate(RATE)
@@ -41,6 +43,15 @@ while True:
             wf.writeframes(data)
 
         wf.close()
+
+        # transcription
+        r = sr.Recognizer()
+        with sr.AudioFile(name + '.wav') as source:
+            audio = r.record(source)
+            f = open(name + '.txt', 'a')
+            f.write(str(r.recognize_google(audio)))
+            f.close()
+
         break
     
 
