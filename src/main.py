@@ -54,6 +54,8 @@ while True:
                 f.write(transcription)
                 f.close()
 
+                if 'stop program' in transcription: break
+
             # break
     except Exception as e:
         f = open('error.txt', 'a')
