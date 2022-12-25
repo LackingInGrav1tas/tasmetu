@@ -11,7 +11,6 @@ RATE = 44100
 THRESHOLD = 300
 
 p = pyaudio.PyAudio()
-
 stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
 recording = False
@@ -36,6 +35,7 @@ def audio_stream_visualization():
         y = y[1:]
         y.append(volume)
         plt.plot(x, y, label="stream")
+        plt.plot(x, [THRESHOLD for i in range(50)])
         plt.pause(0.01)
 
 
