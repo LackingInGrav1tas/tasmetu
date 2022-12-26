@@ -38,13 +38,12 @@ def audio_stream_visualization():
         y.append(volume)
         plt.plot(x, y, label="stream")
         plt.plot(x, [THRESHOLD for i in range(50)])
+        plt.ylabel("volume")
         plt.pause(0.01)
-
 
 if __name__ == "__main__":
     visualization = multiprocessing.Process(target=audio_stream_visualization)
     visualization.start()
-
 
     while True:
         data = stream.read(CHUNK)
@@ -67,13 +66,12 @@ if __name__ == "__main__":
             recording = True
 
         if recording:
-            print(f"recording {elapsed_silence}")
+            print(f"\rrecording {elapsed_silence}   ", end='')
             
             wf.writeframes(data)
 
             if volume < THRESHOLD:
                 if elapsed_silence > 100:
-                    print("done")
                     recording = False
                     elapsed_silence = 0
                     wf.close()
@@ -91,13 +89,10 @@ if __name__ == "__main__":
                         f.write(transcription)
                         f.close()
 
-                    os.system(COMPRESSION_COMMAND.replace("file", 'data/' + name + '.wav'))
-
+                    os.system(COMPRESSION_COMMAND.replace("file", audio_file))
                     if 'stop program' in transcription: break 
 
-                else:
-                    elapsed_silence += 1
-
+                else: elapsed_silence += 1
 
     stream.stop_stream()
     stream.close()
