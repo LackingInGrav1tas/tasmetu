@@ -1,4 +1,4 @@
-import pyaudio, wave, multiprocessing
+import pyaudio, wave, multiprocessing, os
 import numpy as np
 from datetime import datetime
 import speech_recognition as sr
@@ -9,6 +9,8 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
 THRESHOLD = 300
+
+COMPRESSION_COMMAND = 'compact /c /q /i "file"'
 
 p = pyaudio.PyAudio()
 stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
@@ -89,7 +91,10 @@ if __name__ == "__main__":
                         f.write(transcription)
                         f.close()
 
-                        if 'stop program' in transcription: break 
+                    os.system(COMPRESSION_COMMAND.replace("file", 'data/' + name + '.wav'))
+
+                    if 'stop program' in transcription: break 
+
                 else:
                     elapsed_silence += 1
 
