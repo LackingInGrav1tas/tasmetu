@@ -1,0 +1,19 @@
+{
+  "name": "viewer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && electron ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^22.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.4"
+  }
+}

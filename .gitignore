@@ -3,3 +3,6 @@
 *.txt
 
 .vscode/
+*/node_modules/
+
+viewer/dist/
