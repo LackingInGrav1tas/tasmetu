@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain as ipc } from "electron"
+import { app, BrowserWindow } from "electron"
 
 app.whenReady().then(createWindow)
 app.on("window-all-closed", () =>

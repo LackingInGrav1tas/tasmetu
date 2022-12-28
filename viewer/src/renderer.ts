@@ -1,24 +1,93 @@
 import fs from "fs"
 
-let canvas = document.querySelector("#canvas") as HTMLCanvasElement
-let c = canvas.getContext("2d")!
+let dataPath = "../data/"
 
-fs.readFile("../data/2022-12-27 12.28.11.583409.wav", async (err, data) =>
+main()
+async function main()
 {
-    if (err) throw err
+    // Sort files based on date
+    let files = await fs.promises.readdir(dataPath)
+    files = files
+        .map(name => [name, fs.statSync(dataPath + name).mtime.getTime()] as [string, number])
+        .sort((a, b) => a[1] - b[1])
+        .map(file => file[0])
 
+    for (let name of files.filter(name => name.endsWith(".wav")))
+    {
+        let data = await fs.promises.readFile(dataPath + name)
+        let transcription = "[no transcription]"
+        try
+        {
+            transcription = await fs.promises.readFile(dataPath + name.slice(0, -4) + ".txt", "utf-8")
+        }
+        catch (e) { }
+
+        renderBufferData(data)
+
+        let p = document.createElement("p")
+        document.body.appendChild(p)
+
+        p.innerText = transcription
+    }
+}
+
+async function renderBufferData(data: Buffer)
+{
+    // Create canvas element
+    let canvas = document.createElement("canvas")
+    let c = canvas.getContext("2d")!
+
+    canvas.width = 1000
+    canvas.height = 200
+
+    document.body.appendChild(canvas)
+
+    let processed = await processAudioData(data, canvas.width * 1.5)
+
+    // Draw shape
+    c.beginPath()
+    let scale = 2
+
+    for (let i = 0; i < processed.length; i++)
+    {
+        let max = processed[i][1]
+        let amplitude = max * canvas.height * scale
+
+        c.lineTo(i / processed.length * canvas.width, canvas.height / 2 + amplitude)
+    }
+
+    for (let i = processed.length - 1; i >= 0; i--) // This is in reverse so it can be done in one fill
+    {
+        let min = processed[i][0]
+        let amplitude = min * canvas.height * scale
+
+        c.lineTo(i / processed.length * canvas.width, canvas.height / 2 + amplitude)
+    }
+    
+    c.closePath()
+
+    c.fillStyle = "#303030"
+    c.fill()
+}
+
+async function processAudioData(data: Buffer, samples: number)
+{
+    // Convert node buffer to js buffer
     let buffer = new ArrayBuffer(data.length)
 
     let view = new Uint8Array(buffer)
     for (let i = 0; i < data.length; i++) view[i] = data[i]
 
+    // Decode audio data
     let context = new AudioContext()
+
     let audioBuffer = await context.decodeAudioData(buffer)
-
     let channel = audioBuffer.getChannelData(0)
-    let processed = []
 
-    let sampleWidth = Math.floor(channel.length / canvas.width / 2)
+    // Sample min and max
+    let processed: [number, number][] = []
+    let sampleWidth = Math.floor(channel.length / samples)
+
     for (let n = 0; n < channel.length; n += sampleWidth)
     {
         let min = Infinity, max = -Infinity
@@ -33,29 +102,5 @@ fs.readFile("../data/2022-12-27 12.28.11.583409.wav", async (err, data) =>
         processed.push([min, max])
     }
 
-    console.log(processed)
-
-    c.beginPath()
-    let scale = 2
-
-    for (let i = 0; i < processed.length; i++)
-    {
-        let max = processed[i][1]
-        let amplitude = max * canvas.height * scale
-
-        c.lineTo(i / processed.length * canvas.width, canvas.height / 2 + amplitude)
-    }
-
-    for (let i = processed.length - 1; i >= 0; i--)
-    {
-        let min = processed[i][0]
-        let amplitude = min * canvas.height * scale
-
-        c.lineTo(i / processed.length * canvas.width, canvas.height / 2 + amplitude)
-    }
-    
-    c.closePath()
-
-    c.fillStyle = "#303030"
-    c.fill()
-})
+    return processed
+}
