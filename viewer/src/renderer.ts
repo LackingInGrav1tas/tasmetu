@@ -6,14 +6,13 @@ main()
 async function main()
 {
     // Sort files based on date
-    let files = await fs.promises.readdir(dataPath)
-    files = files
+    let files = (await fs.promises.readdir(dataPath))
+        .filter(name => name.endsWith(".wav"))
         .map(name => [name, fs.statSync(dataPath + name).mtime.getTime()] as [string, number])
         .sort((a, b) => b[1] - a[1])
         .map(file => file[0])
 
-    let soundFiles = files.filter(name => name.endsWith(".wav"))
-    for (let name of soundFiles)
+    for (let name of files)
     {
         let data = await fs.promises.readFile(dataPath + name)
         let transcription = "[no transcription]"
@@ -23,16 +22,11 @@ async function main()
         }
         catch (e) { }
 
-        renderBufferData(data)
-
-        let p = document.createElement("p")
-        document.body.appendChild(p)
-
-        p.innerText = transcription
+        await renderBufferData(data, transcription)
     }
 }
 
-async function renderBufferData(data: Buffer)
+async function renderBufferData(data: Buffer, transcription: string)
 {
     // Create canvas element
     let canvas = document.createElement("canvas")
@@ -43,7 +37,11 @@ async function renderBufferData(data: Buffer)
 
     document.body.appendChild(canvas)
 
-    let processed = await processAudioData(data, canvas.width * 1.5)
+    // decodeAudioBuffer() destroys the data, so have to copy to blob earlier
+    let buffer = toArrayBuffer(data)
+    let blob = new Blob([buffer], { type: "audio/wav" })
+
+    let processed = await processAudioData(buffer, canvas.width * 1.5)
 
     // Draw shape
     c.beginPath()
@@ -69,16 +67,34 @@ async function renderBufferData(data: Buffer)
 
     c.fillStyle = "#303030"
     c.fill()
+    
+    // Show transcription
+    let p = document.createElement("p")
+    document.body.appendChild(p)
+
+    p.innerText = transcription
+
+    // Playback element
+    let audio = document.createElement("audio")
+    document.body.appendChild(audio)
+
+    audio.src = window.URL.createObjectURL(blob)
+    audio.controls = true
 }
 
-async function processAudioData(data: Buffer, samples: number)
+function toArrayBuffer(buffer: Buffer): ArrayBuffer
 {
     // Convert node buffer to js buffer
-    let buffer = new ArrayBuffer(data.length)
+    let arrayBuffer = new ArrayBuffer(buffer.length)
 
-    let view = new Uint8Array(buffer)
-    for (let i = 0; i < data.length; i++) view[i] = data[i]
+    let view = new Uint8Array(arrayBuffer)
+    for (let i = 0; i < buffer.length; i++) view[i] = buffer[i]
 
+    return arrayBuffer
+}
+
+async function processAudioData(buffer: ArrayBuffer, samples: number): Promise<[number, number][]>
+{
     // Decode audio data
     let context = new AudioContext()
 
