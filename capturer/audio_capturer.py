@@ -10,7 +10,7 @@ CHANNELS = 1
 RATE = 44100
 THRESHOLD = 300
 
-COMPRESSION_COMMAND = 'compact /c /q /i "file"'
+COMPRESSION_COMMAND = 'compact /c /q /i "file > NUL"'
 
 p = pyaudio.PyAudio()
 stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
