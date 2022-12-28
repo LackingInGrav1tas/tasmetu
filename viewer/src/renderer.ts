@@ -9,10 +9,11 @@ async function main()
     let files = await fs.promises.readdir(dataPath)
     files = files
         .map(name => [name, fs.statSync(dataPath + name).mtime.getTime()] as [string, number])
-        .sort((a, b) => a[1] - b[1])
+        .sort((a, b) => b[1] - a[1])
         .map(file => file[0])
 
-    for (let name of files.filter(name => name.endsWith(".wav")))
+    let soundFiles = files.filter(name => name.endsWith(".wav"))
+    for (let name of soundFiles)
     {
         let data = await fs.promises.readFile(dataPath + name)
         let transcription = "[no transcription]"
