@@ -13,7 +13,6 @@ THRESHOLD = 300
 COMPRESSION_COMMAND = 'compact /c /q /i "file > NUL"'
 
 p = pyaudio.PyAudio()
-stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
 recording = False
 elapsed_silence = 0
@@ -29,7 +28,7 @@ def audio_stream_visualization():
     plt.ylim([0, 3000])
 
     while True:
-        data = stream.read(CHUNK)
+        data = s.read(CHUNK)
         audio_data = np.frombuffer(data, dtype=np.int16)
         volume = np.abs(audio_data).mean()
 
@@ -44,6 +43,7 @@ def audio_stream_visualization():
 if __name__ == "__main__":
     visualization = multiprocessing.Process(target=audio_stream_visualization)
     visualization.start()
+    stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
     while True:
         data = stream.read(CHUNK)
