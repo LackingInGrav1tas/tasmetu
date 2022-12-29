@@ -12,7 +12,7 @@ def transcribe(audio_file):
             transcription = str(r.recognize_google(audio))
         except:
             print("unrecognized")
-            transcription = "unrecognized"
+            transcription = "[unrecognized]"
         f.write(transcription)
         f.close()
 
