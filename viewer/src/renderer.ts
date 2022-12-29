@@ -22,7 +22,7 @@ async function main()
         }
         catch (e) { }
 
-        await renderBufferData(data, transcription)
+        renderBufferData(data, name + ": " + transcription)
     }
 }
 
@@ -32,16 +32,29 @@ async function renderBufferData(data: Buffer, transcription: string)
     let canvas = document.createElement("canvas")
     let c = canvas.getContext("2d")!
 
-    canvas.width = 1000
+    canvas.width = window.innerWidth
     canvas.height = 200
 
     document.body.appendChild(canvas)
+
+    // Show transcription
+    let p = document.createElement("p")
+    document.body.appendChild(p)
+
+    p.innerText = transcription
+
+    // Playback element
+    let audio = document.createElement("audio")
+    document.body.appendChild(audio)
 
     // decodeAudioBuffer() destroys the data, so have to copy to blob earlier
     let buffer = toArrayBuffer(data)
     let blob = new Blob([buffer], { type: "audio/wav" })
 
-    let processed = await processAudioData(buffer, canvas.width * 1.5)
+    audio.src = window.URL.createObjectURL(blob)
+    audio.controls = true
+
+    let processed = await processAudioData(buffer, canvas.width * 2)
 
     // Draw shape
     c.beginPath()
@@ -67,19 +80,6 @@ async function renderBufferData(data: Buffer, transcription: string)
 
     c.fillStyle = "#303030"
     c.fill()
-    
-    // Show transcription
-    let p = document.createElement("p")
-    document.body.appendChild(p)
-
-    p.innerText = transcription
-
-    // Playback element
-    let audio = document.createElement("audio")
-    document.body.appendChild(audio)
-
-    audio.src = window.URL.createObjectURL(blob)
-    audio.controls = true
 }
 
 function toArrayBuffer(buffer: Buffer): ArrayBuffer
@@ -105,6 +105,7 @@ async function processAudioData(buffer: ArrayBuffer, samples: number): Promise<[
     let processed: [number, number][] = []
     let sampleWidth = Math.floor(channel.length / samples)
 
+    if (sampleWidth <= 0) sampleWidth = 1
     for (let n = 0; n < channel.length; n += sampleWidth)
     {
         let min = Infinity, max = -Infinity
