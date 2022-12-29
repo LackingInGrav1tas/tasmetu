@@ -42,15 +42,19 @@ class AudioScanner:
             plt.pause(0.01)
 
     def begin_visualization(self):
+        """Starts realtime audio stream visualization"""
         self.v = multiprocessing.Process(target=self._visualization, args=())
         self.v.start()
         self.visualize = True
 
     def onReceive(self, function, name_function):
+        """Upon receiving audio above the threshold, AudioScanner saves the recording to a file named name_function().
+        It then calls function with the file name as its argument. If function() returns True, the loop exits."""
         self.fn = function
         self.name_fn = name_function       
 
     def listen(self):
+        """Audio scanner main loop"""
         stream = p.open(format=self.format, channels=self.channels, rate=self.rate, input=True, frames_per_buffer=self.chunk)
         
         recording = False
