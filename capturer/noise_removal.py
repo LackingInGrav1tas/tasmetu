@@ -50,9 +50,9 @@ else:
     print('y2')
     y2 = np.fft.fft(y1)
     print('p')
-    p = np.percentile(np.abs(y2[:][1]), 99)
+    p = np.percentile(np.abs(y2), 85)
     print('y3')
-    y3 = [ v if v > p or v < -p else 0 for v in y2 ]
+    y3 = [ v if np.abs(v) > p else 0 for v in y2 ]
     print('y4')
     y4 = np.fft.ifft(y3)
     print('done')
