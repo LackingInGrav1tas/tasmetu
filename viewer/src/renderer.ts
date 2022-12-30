@@ -1,6 +1,6 @@
 import fs from "fs"
 
-const DATA_PATH = "../data/"
+const DATA_PATH = "G:/My Drive/"
 const RENDER_HEIGHT = 200
 
 const OFFSET = 0.25
