@@ -21,10 +21,10 @@ def transcribe(audio_file):
     return False 
 
 def name():
-    return 'data/' + str(datetime.now()).replace(':', '.') + '.wav'
+    return 'g:/My Drive/' + str(datetime.now()).replace(':', '.') + '.wav'
 
 if __name__ == "__main__":
-    asc = AudioScanner(1024, pyaudio.paInt16, 1, 44100, 300, 100)
+    asc = AudioScanner(chunk=1024, format=pyaudio.paInt16, channels=1, rate=44100, threshold=300, silence=100)
     asc.begin_visualization()
     asc.onReceive(transcribe, name)
     asc.listen()
