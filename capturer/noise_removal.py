@@ -6,7 +6,7 @@ def remove_noise(filename):
     pass
 
 # y1 = pydub.AudioSegment.from_wav("data/test.wav").get_array_of_samples()
-if True:
+if False:
     x = [0]
     for i in range(100):
         x.append(x[-1] + 0.1)
@@ -45,14 +45,14 @@ if True:
     plt.show()
 else:
     print('y1')
-    y1 = pydub.AudioSegment.from_wav("data/test.wav").get_array_of_samples()
+    y1 = pydub.AudioSegment.from_wav("data/2022-12-27 12.28.11.583409.wav").get_array_of_samples()
     x = [ i for i in range(len(y1))]
     print('y2')
-    y2 = np.abs(np.fft.fft(y1))
+    y2 = np.fft.fft(y1)
     print('p')
-    p = np.percentile(y2, 99)
+    p = np.percentile(np.abs(y2[:][1]), 99)
     print('y3')
-    y3 = [ v if v > p else 0 for v in y2 ]
+    y3 = [ v if v > p or v < -p else 0 for v in y2 ]
     print('y4')
     y4 = np.fft.ifft(y3)
     print('done')
