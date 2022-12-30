@@ -21,7 +21,7 @@ def transcribe(audio_file):
     return False 
 
 def name():
-    return 'g:/My Drive/' + str(datetime.now()).replace(':', '.') + '.wav'
+    return 'g:/My Drive/tasmetu-archive/' + str(datetime.now()).replace(':', '.') + '.wav'
 
 if __name__ == "__main__":
     asc = AudioScanner(chunk=1024, format=pyaudio.paInt16, channels=1, rate=44100, threshold=300, silence=100)
