@@ -1,18 +1,30 @@
 import fs from "fs"
+import { DATA_PATH } from "./env"
 
-const DATA_PATH = "G:/My Drive/tasmetu-archive/"
 const RENDER_HEIGHT = 200
-
 const OFFSET = 0.25
 
 main()
 async function main()
 {
     // Sort files based on date
-    let files = (await fs.promises.readdir(DATA_PATH))
+    let fileData = (await fs.promises.readdir(DATA_PATH))
         .filter(name => name.endsWith(".wav"))
-        .map(name => [name, fs.statSync(DATA_PATH + name).mtime.getTime()] as [string, number])
-        .sort((a, b) => b[1] - a[1])
+        .map(name => [name, toJSDate(name.slice(0, -4))] as [string, Date])
+
+    // Filter based on parameters
+    let params = new URLSearchParams(window.location.search)
+    if (params.get("start"))
+        fileData = fileData.filter(([_, date]) => 
+        {
+            console.log(date.getTime(), parseInt(params.get("start")!))
+            return date.getTime() > parseInt(params.get("start")!)
+        })
+    if (params.get("end"))
+        fileData = fileData.filter(([_, date]) => date.getTime() < parseInt(params.get("end")!))
+
+    let files = fileData
+        .sort((a, b) => b[1].getTime() - a[1].getTime())
         .map(file => file[0])
 
     for (let name of files)
@@ -29,6 +41,17 @@ async function main()
     }
 }
 
+function toJSDate(string: string): Date
+{
+    let i = string.lastIndexOf(".")
+    string = string
+        .replace(" ", "T")
+        .replaceAll(".", ":")
+
+    string = string.substring(0, i) + "." + string.substring(i + 1)
+    return new Date(string)
+}
+
 async function renderBufferData(data: Buffer, transcription: string)
 {
     // Create canvas element
@@ -43,10 +66,10 @@ async function renderBufferData(data: Buffer, transcription: string)
     document.body.appendChild(div)
 
     // Show transcription
-    let p = document.createElement("p")
-    div.appendChild(p)
+    let span = document.createElement("span")
+    div.appendChild(span)
 
-    p.innerText = transcription
+    span.innerText = transcription
 
     // Playback element
     let audio = document.createElement("audio")

@@ -17,5 +17,5 @@ function createWindow()
         }
     })
 
-    win.loadFile("../src/index.html")
+    win.loadFile("../public/home.html")
 }
