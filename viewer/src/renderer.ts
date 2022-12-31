@@ -15,11 +15,7 @@ async function main()
     // Filter based on parameters
     let params = new URLSearchParams(window.location.search)
     if (params.get("start"))
-        fileData = fileData.filter(([_, date]) => 
-        {
-            console.log(date.getTime(), parseInt(params.get("start")!))
-            return date.getTime() > parseInt(params.get("start")!)
-        })
+        fileData = fileData.filter(([_, date]) => date.getTime() > parseInt(params.get("start")!))
     if (params.get("end"))
         fileData = fileData.filter(([_, date]) => date.getTime() < parseInt(params.get("end")!))
 
