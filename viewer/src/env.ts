@@ -1,2 +1,1 @@
-export const DATA_PATH = "../data/"
-// "G:/My Drive/tasmetu-archive/"
+export const DATA_PATH = "G:/My Drive/tasmetu-archive/" //  "../data/"
