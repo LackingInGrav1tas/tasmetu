@@ -19,22 +19,23 @@ async function main()
     if (params.get("end"))
         fileData = fileData.filter(([_, date]) => date.getTime() < parseInt(params.get("end")!))
 
-    let files = fileData
+    let renders = await Promise.all(fileData
         .sort((a, b) => b[1].getTime() - a[1].getTime())
         .map(file => file[0])
-
-    for (let name of files)
-    {
-        let data = await fs.promises.readFile(DATA_PATH + name)
-        let transcription = "[no transcription]"
-        try
+        .map(async name =>
         {
-            transcription = await fs.promises.readFile(DATA_PATH + name.slice(0, -4) + ".txt", "utf-8")
-        }
-        catch (e) { }
-
-        renderBufferData(data, name + "\n" + transcription)
-    }
+            let data = await fs.promises.readFile(DATA_PATH + name)
+            let transcription = "[no transcription]"
+            try
+            {
+                transcription = await fs.promises.readFile(DATA_PATH + name.slice(0, -4) + ".txt", "utf-8")
+            }
+            catch (e) { }
+    
+            return await renderBufferData(data, name.slice(0, -4) + "\n" + transcription)
+        }))
+        
+    for (let render of renders) document.body.appendChild(render)
 }
 
 function toJSDate(string: string): Date
@@ -44,22 +45,25 @@ function toJSDate(string: string): Date
         .replace(" ", "T")
         .replaceAll(".", ":")
 
-    string = string.substring(0, i) + "." + string.substring(i + 1)
-    return new Date(string)
+    return new Date(string.substring(0, i) + "." + string.substring(i + 1))
 }
 
-async function renderBufferData(data: Buffer, transcription: string)
+async function renderBufferData(data: Buffer, transcription: string): Promise<HTMLDivElement>
 {
+    let render = document.createElement("div")
+
     // Create canvas element
     let canvas = document.createElement("canvas")
     let c = canvas.getContext("2d")!
-    document.body.appendChild(canvas)
+    render.appendChild(canvas)
 
     canvas.width = window.innerWidth
     canvas.height = RENDER_HEIGHT + 1 // Looks better when odd for some reason
 
     let div = document.createElement("div")
-    document.body.appendChild(div)
+    render.appendChild(div)
+
+    div.classList.add("description")
 
     // Show transcription
     let span = document.createElement("span")
@@ -108,6 +112,8 @@ async function renderBufferData(data: Buffer, transcription: string)
 
     c.fillStyle = "#303030"
     c.fill()
+
+    return render
 }
 
 function toArrayBuffer(buffer: Buffer): ArrayBuffer

@@ -11,9 +11,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "electron": "^22.0.0"
+    "electron": "^22.0.0",
+    "fuzzy-search": "^3.2.1"
   },
   "devDependencies": {
+    "@types/fuzzy-search": "^2.1.2",
     "typescript": "^4.9.4"
   }
 }

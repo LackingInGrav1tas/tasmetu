@@ -1,9 +1,16 @@
 import fs from "fs"
+import FuzzySearch from "fuzzy-search"
 import { DATA_PATH } from "./env"
 
 main()
 async function main()
 {
+    let filter = document.querySelector("#filter") as HTMLFormElement
+    filter.addEventListener("submit", onSubmitFilter)
+
+    let search = document.querySelector("#search") as HTMLFormElement
+    search.addEventListener("submit", onSubmitSearch)
+
     let dates = Object.entries((await fs.promises.readdir(DATA_PATH))
         .filter(name => name.endsWith(".wav"))
         .map(name => Date.parse(name.split(" ")[0] + "T00:00:00"))
@@ -18,12 +25,9 @@ async function main()
 
         p.innerText = date.toDateString() + ": " + count + " recording(s)"
     }
-
-    let form = document.querySelector("#filter") as HTMLFormElement
-    form.addEventListener("submit", onSubmit)
 }
 
-function onSubmit(e: Event)
+function onSubmitFilter(e: Event)
 {
     e.preventDefault()
 
@@ -41,6 +45,36 @@ function onSubmit(e: Event)
     }
 
     window.location.href = "./index.html?" + params
+}
+
+async function onSubmitSearch(e: Event)
+{
+    e.preventDefault()
+
+    let query = document.querySelector("#query") as HTMLInputElement
+    let results = document.querySelector("#search-results") as HTMLDivElement
+
+    let data = (await Promise.all((await fs.promises.readdir(DATA_PATH))
+        .filter(name => name.endsWith(".txt"))
+        .map(async name =>
+        {
+            let transcript = await fs.promises.readFile(DATA_PATH + name, "utf-8")
+            return { name: name.slice(0, -4), transcript }
+        })))
+        .filter(file => file.transcript !== "[unrecognized]")
+    
+    // Perform search
+    let search = new FuzzySearch(data, ["transcript"], { sort: true })
+    let result = search.search(query.value)
+        .map(({ name, transcript } ) =>
+        {
+            let p = document.createElement("p")
+            p.innerText = name + ": " + transcript
+
+            return p
+        })
+    
+    results.replaceChildren(...result)
 }
 
 function toLocalDate(date: Date): Date

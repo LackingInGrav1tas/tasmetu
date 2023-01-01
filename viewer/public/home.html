@@ -8,9 +8,10 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <script>require("../dist/home.js")</script>
-
     <form id="filter">
+        <h2>Filter by date</h2>
+        <span>Leaving a field blank disables the filter</span>
+        <br>
         <span>Start: </span>
         <input type="date" id="start">
         <br>
@@ -19,5 +20,15 @@
         <br>
         <input type="submit" value="View recordings">
     </form>
+
+    <form id="search">
+        <h2>Search terms</h2>
+        <input type="text" id="query">
+        <input type="submit" value="Search">
+        <div id="search-results"></div>
+    </form>
+
+    <h2>Overview</h2>
+    <script>require("../dist/home.js")</script>
 </body>
 </html>
