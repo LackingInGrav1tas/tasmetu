@@ -1,7 +1,7 @@
 import fs from "fs"
 import { DATA_PATH } from "./env"
 
-const RENDER_HEIGHT = 200
+const RENDER_HEIGHT = 100
 const OFFSET = 0.25
 
 main()
@@ -24,17 +24,17 @@ async function main()
         .map(file => file[0])
         .map(async name =>
         {
-            let data = await fs.promises.readFile(DATA_PATH + name)
-            let transcription = "[no transcription]"
-            try
-            {
-                transcription = await fs.promises.readFile(DATA_PATH + name.slice(0, -4) + ".txt", "utf-8")
-            }
-            catch (e) { }
+            let data = fs.promises.readFile(DATA_PATH + name)
+            let transcriptPromise = fs.promises.readFile(DATA_PATH + name.slice(0, -4) + ".txt", "utf-8")
+
+            let transcription: string
+            try { transcription = await transcriptPromise }
+            catch (e) { transcription = "[no transcription]" }
     
-            return await renderBufferData(data, name.slice(0, -4) + "\n" + transcription)
+            return await renderBufferData(await data, name.slice(0, -4) + "\n" + transcription)
         }))
         
+    document.body.removeChild(document.querySelector("#loading") as HTMLParagraphElement)
     for (let render of renders) document.body.appendChild(render)
 }
 
@@ -83,7 +83,7 @@ async function renderBufferData(data: Buffer, transcription: string): Promise<HT
     audio.controls = true
 
     let decoded = await decodeAudioData(buffer)
-    let processed = sampleData(decoded, canvas.width * 2)
+    let processed = sampleData(decoded, canvas.width * 1.5)
 
     let max = -Infinity
     for (let [sampleMin, sampleMax] of processed)

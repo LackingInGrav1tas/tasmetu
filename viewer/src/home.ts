@@ -47,6 +47,7 @@ function onSubmitFilter(e: Event)
     window.location.href = "./index.html?" + params
 }
 
+let data: { name: string, transcript: string }[] | null = null
 async function onSubmitSearch(e: Event)
 {
     e.preventDefault()
@@ -54,15 +55,22 @@ async function onSubmitSearch(e: Event)
     let query = document.querySelector("#query") as HTMLInputElement
     let results = document.querySelector("#search-results") as HTMLDivElement
 
-    let data = (await Promise.all((await fs.promises.readdir(DATA_PATH))
-        .filter(name => name.endsWith(".txt"))
-        .map(async name =>
-        {
-            let transcript = await fs.promises.readFile(DATA_PATH + name, "utf-8")
-            return { name: name.slice(0, -4), transcript }
-        })))
-        .filter(file => file.transcript !== "[unrecognized]")
-    
+    if (!data)
+    {
+        let loading = document.createElement("p")
+        loading.innerText = "Loading..."
+        results.replaceChildren(loading)
+
+        data = (await Promise.all((await fs.promises.readdir(DATA_PATH))
+            .filter(name => name.endsWith(".txt"))
+            .map(async name =>
+            {
+                let transcript = await fs.promises.readFile(DATA_PATH + name, "utf-8")
+                return { name: name.slice(0, -4), transcript }
+            })))
+            .filter(file => file.transcript !== "[unrecognized]")
+    }
+
     // Perform search
     let search = new FuzzySearch(data, ["transcript"], { sort: true })
     let result = search.search(query.value)
