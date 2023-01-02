@@ -7,3 +7,4 @@
 
 viewer/dist/
 *.pyc
+noise-profile.prof

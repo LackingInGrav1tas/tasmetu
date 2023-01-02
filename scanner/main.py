@@ -4,6 +4,12 @@ from datetime import datetime
 import pyaudio, os
 
 def transcribe(audio_file):
+    os.system(f'sox "{audio_file}" -n noiseprof noise-profile.prof')
+    os.system(f'sox "{audio_file}" "{audio_file.replace("archive/", "archive/F-")}" noisered noise-profile.prof')
+    os.remove(audio_file)
+    os.remove("noise-profile.prof")
+    os.rename(audio_file.replace("archive/", "archive/F-"), audio_file)
+
     r = sr.Recognizer()
     with sr.AudioFile(audio_file) as source:
         audio = r.record(source)
