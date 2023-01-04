@@ -31,7 +31,7 @@ async function main()
             try { transcription = await transcriptPromise }
             catch (e) { transcription = "[no transcription]" }
     
-            return await renderBufferData(await data, name.slice(0, -4) + "\n" + transcription)
+            return await renderBufferData(await data, name.slice(0, -4), transcription)
         }))
         
     document.body.removeChild(document.querySelector("#loading") as HTMLParagraphElement)
@@ -48,7 +48,8 @@ function toJSDate(string: string): Date
     return new Date(string.substring(0, i) + "." + string.substring(i + 1))
 }
 
-async function renderBufferData(data: Buffer, transcription: string): Promise<HTMLDivElement>
+async function renderBufferData(data: Buffer, name: string, transcription: string):
+    Promise<HTMLDivElement | HTMLParagraphElement>
 {
     let render = document.createElement("div")
 
@@ -69,7 +70,7 @@ async function renderBufferData(data: Buffer, transcription: string): Promise<HT
     let span = document.createElement("span")
     div.appendChild(span)
 
-    span.innerText = transcription
+    span.innerText = name + "\n" + transcription
 
     // Playback element
     let audio = document.createElement("audio")
@@ -82,38 +83,48 @@ async function renderBufferData(data: Buffer, transcription: string): Promise<HT
     audio.src = window.URL.createObjectURL(blob)
     audio.controls = true
 
-    let decoded = await decodeAudioData(buffer)
-    let processed = sampleData(decoded, canvas.width * 1.5)
-
-    let max = -Infinity
-    for (let [sampleMin, sampleMax] of processed)
+    try
     {
-        let maxDisplacement = Math.max(Math.abs(sampleMin), Math.abs(sampleMax))
-        if (maxDisplacement > max) max = maxDisplacement
-    }
-
-    // Draw shape
-    c.beginPath()
-    let scale = canvas.height / 2 / max
-
-    for (let i = 0; i < processed.length; i++)
-    {
-        let amplitude = processed[i][1] * scale
-        c.lineTo(i / processed.length * canvas.width, canvas.height / 2 + amplitude + OFFSET)
-    }
-
-    for (let i = processed.length - 1; i >= 0; i--) // This is in reverse so it can be done in one fill
-    {
-        let amplitude = processed[i][0] * scale
-        c.lineTo(i / processed.length * canvas.width, canvas.height / 2 + amplitude - OFFSET)
-    }
+        let decoded = await decodeAudioData(buffer)
+        let processed = sampleData(decoded, canvas.width * 1.5)
     
-    c.closePath()
+        let max = -Infinity
+        for (let [sampleMin, sampleMax] of processed)
+        {
+            let maxDisplacement = Math.max(Math.abs(sampleMin), Math.abs(sampleMax))
+            if (maxDisplacement > max) max = maxDisplacement
+        }
+    
+        // Draw shape
+        c.beginPath()
+        let scale = canvas.height / 2 / max
+    
+        for (let i = 0; i < processed.length; i++)
+        {
+            let amplitude = processed[i][1] * scale
+            c.lineTo(i / processed.length * canvas.width, canvas.height / 2 + amplitude + OFFSET)
+        }
+    
+        for (let i = processed.length - 1; i >= 0; i--) // This is in reverse so it can be done in one fill
+        {
+            let amplitude = processed[i][0] * scale
+            c.lineTo(i / processed.length * canvas.width, canvas.height / 2 + amplitude - OFFSET)
+        }
+        
+        c.closePath()
+    
+        c.fillStyle = "#303030"
+        c.fill()
+    
+        return render
+    }
+    catch
+    {
+        let error = document.createElement("p")
+        error.innerText = "Error loading " + name
 
-    c.fillStyle = "#303030"
-    c.fill()
-
-    return render
+        return error
+    }
 }
 
 function toArrayBuffer(buffer: Buffer): ArrayBuffer
