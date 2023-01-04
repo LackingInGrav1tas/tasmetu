@@ -8,27 +8,31 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <form id="filter">
-        <h2>Filter by date</h2>
-        <span>Leaving a field blank disables the filter</span>
-        <br>
-        <span>Start: </span>
-        <input type="date" id="start">
-        <br>
-        <span>End: </span>
-        <input type="date" id="end">
-        <br>
-        <input type="submit" value="View recordings">
-    </form>
-
-    <form id="search">
-        <h2>Search terms</h2>
-        <input type="text" id="query">
-        <input type="submit" value="Search">
-        <div id="search-results"></div>
-    </form>
-
-    <h2>Overview</h2>
+    <div class="main">
+        <div class="forms">
+            <form id="search">
+                <h2>Search</h2>
+                <input type="text" id="query">
+                <input type="submit" value="Search">
+                <div id="search-results"></div>
+            </form>
+        
+            <form id="filter">
+                <h2>Filter by date</h2>
+                <span>Leaving a field blank disables the filter</span>
+                <br><br>
+                <h3>Start</h3>
+                <input type="date" id="start">
+                <h3>End</h3>
+                <input type="date" id="end">
+                <br><br>
+                <input type="submit" value="View recordings">
+            </form>
+        </div>
+        <div id="overview">
+            <h2>Overview</h2>
+        </div>
+    </div>
     <script>require("../dist/home.js")</script>
 </body>
 </html>

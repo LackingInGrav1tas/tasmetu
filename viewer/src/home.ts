@@ -17,14 +17,16 @@ async function main()
         .reduce((acc, date) => (acc[date] ? acc[date]++ : acc[date] = 1, acc), {} as { [key: number]: number }))
         .map(([date, count]) => [new Date(parseInt(date)), count] as [Date, number])
         .sort((a, b) => b[0].getTime() - a[0].getTime())
+        .map(([date, count]) =>
+        {
+            let p = document.createElement("p")
+            p.innerText = date.toDateString() + ": " + count + " recording(s)"
+            
+            return p
+        })
 
-    for (let [date, count] of dates)
-    {
-        let p = document.createElement("p")
-        document.body.appendChild(p)
-
-        p.innerText = date.toDateString() + ": " + count + " recording(s)"
-    }
+    let overview = document.querySelector("#overview")!
+    overview.append(...dates)
 }
 
 function onSubmitFilter(e: Event)
