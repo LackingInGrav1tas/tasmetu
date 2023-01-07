@@ -20,7 +20,9 @@ async function main()
         .map(([date, count]) =>
         {
             let p = document.createElement("p")
-            p.innerText = date.toDateString() + ": " + count + " recording(s)"
+            
+            p.innerText = date.toDateString() + ": " + count + " recording"
+            if (count !== 1) p.innerText += "s"
             
             return p
         })
