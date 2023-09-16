@@ -39,7 +39,7 @@ async function main()
 
     // Generate pagination data
     let pageContainer = document.querySelector("#pages")!
-    let count = Math.floor(files.length / FILES_PER_PAGE)
+    let count = Math.ceil(files.length / FILES_PER_PAGE)
 
     for (let i = 0; i < count; i++)
     {
@@ -113,7 +113,7 @@ async function renderBufferData(data: Buffer, name: string, transcription: strin
     let audio = document.createElement("audio")
     div.appendChild(audio)
 
-    // decodeAudioBuffer() destroys the data, so have to copy to blob earlier
+    // decodeAudioBuffer destroys the data, so have to copy to blob earlier
     let buffer = toArrayBuffer(data)
     let blob = new Blob([buffer], { type: "audio/wav" })
 
@@ -124,35 +124,35 @@ async function renderBufferData(data: Buffer, name: string, transcription: strin
     {
         let decoded = await decodeAudioData(buffer)
         let processed = sampleData(decoded, canvas.width * 1.5)
-    
+
         let max = -Infinity
         for (let [sampleMin, sampleMax] of processed)
         {
             let maxDisplacement = Math.max(Math.abs(sampleMin), Math.abs(sampleMax))
             if (maxDisplacement > max) max = maxDisplacement
         }
-    
+
         // Draw shape
         c.beginPath()
         let scale = canvas.height / 2 / max
-    
+
         for (let i = 0; i < processed.length; i++)
         {
             let amplitude = processed[i][1] * scale
             c.lineTo(i / processed.length * canvas.width, canvas.height / 2 + amplitude + OFFSET)
         }
-    
+
         for (let i = processed.length - 1; i >= 0; i--) // This is in reverse so it can be done in one fill
         {
             let amplitude = processed[i][0] * scale
             c.lineTo(i / processed.length * canvas.width, canvas.height / 2 + amplitude - OFFSET)
         }
-        
+
         c.closePath()
-    
+
         c.fillStyle = "#303030"
         c.fill()
-    
+
         return render
     }
     catch
