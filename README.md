@@ -27,3 +27,5 @@ After the recording is finished, the scanner removes static noise using SoX and 
 ### Viewer
 
 The repository also contains a viewer program for navigating the large number of audio and transcript files the scanner generates. Features include a fuzzy search engine, and a filter by date and hour system. The program also generates visual waveforms of the audio files in the paginated viewer.
+
+![image](https://github.com/LackingInGrav1tas/tasmetu/assets/69087617/0ebaf4fa-69e1-4457-9b25-8a6be95893a8)
