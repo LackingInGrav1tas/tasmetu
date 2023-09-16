@@ -35,7 +35,7 @@ async function main()
                 return time >= min && time < max
             }))))
         .reduce((acc, current) => [...acc, ...current])
-        .sort((a, b) => b[1].getTime() - a[1].getTime()) // Sort files based on date
+        .sort((a, b) => a[1].getTime() - b[1].getTime()) // Sort files based on date
 
     // Generate pagination data
     let pageContainer = document.querySelector("#pages")!
@@ -59,13 +59,12 @@ async function setActive(page: number)
     for (let page of pages) page.classList.remove("active")
     pages[page].classList.add("active")
 
-    // Clear existing files
     let content = document.querySelector("#content") as HTMLDivElement
-    while (content.lastElementChild !== null) content.removeChild(content.lastElementChild)
 
+    // Let user know the files are being loaded
     let loading = document.createElement("p")
     loading.innerText = "Loading..."
-    content.appendChild(loading)
+    content.replaceChildren(loading)
 
     // Render files
     let start = page * FILES_PER_PAGE
@@ -83,8 +82,7 @@ async function setActive(page: number)
             return await renderBufferData(await data, name.slice(0, -4), transcription)
         }))
 
-    content.removeChild(content.lastElementChild!)
-    for (let render of renders) content.appendChild(render)
+    content.replaceChildren(...renders)
 }
 
 async function renderBufferData(data: Buffer, name: string, transcription: string):

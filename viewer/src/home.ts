@@ -60,8 +60,7 @@ function onSubmitFilter(e: Event)
     window.location.href = "./index.html?" + params
 }
 
-// TODO: Fix search system
-let data: { name: string, transcript: string }[] | null = null
+let search: FuzzySearch<{ name: string, transcript: string }> | null = null
 async function onSubmitSearch(e: Event)
 {
     e.preventDefault()
@@ -69,32 +68,38 @@ async function onSubmitSearch(e: Event)
     let query = document.querySelector("#query") as HTMLInputElement
     let results = document.querySelector("#search-results") as HTMLDivElement
 
-    if (!data)
+    if (search === null)
     {
+        // Load all transcripts
         let loading = document.createElement("p")
-        loading.innerText = "Loading..."
+        loading.innerText = "Generating index... "
         results.replaceChildren(loading)
 
-        data = (await Promise.all((await fs.promises.readdir(DATA_PATH))
-            .filter(name => name.endsWith(".txt"))
-            .map(async name =>
+        let folders = await fs.promises.readdir(DATA_PATH)
+        let files = (await Promise.all(folders
+            .map(async folder =>
             {
-                let transcript = await fs.promises.readFile(DATA_PATH + name, "utf-8")
-                return { name: name.slice(0, -4), transcript }
+                return (await fs.promises.readdir(DATA_PATH + folder))
+                    .filter(name => name.endsWith(".txt"))
+                    .map(name => folder + "/" + name)
             })))
-            .filter(file => file.transcript !== "[unrecognized]")
+            .reduce((acc, current) => [...acc, ...current])
+
+        let data = await Promise.all(files.map(async name =>
+        {
+            let transcript = await fs.promises.readFile(DATA_PATH + name, "utf-8")
+            return { name: name.slice(0, -4), transcript }
+        }))
+        search = new FuzzySearch(data, ["transcript"], { sort: true })
     }
 
     // Perform search
-    let search = new FuzzySearch(data, ["transcript"], { sort: true })
-    let result = search.search(query.value)
-        .map(({ name, transcript } ) =>
-        {
-            let p = document.createElement("p")
-            p.innerText = name + ": " + transcript
+    let result = search.search(query.value).map(({ name, transcript }) =>
+    {
+        let p = document.createElement("p")
+        p.innerText = name + ": " + transcript
 
-            return p
-        })
-    
+        return p
+    })
     results.replaceChildren(...result)
 }
