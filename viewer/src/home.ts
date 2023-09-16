@@ -77,12 +77,10 @@ async function onSubmitSearch(e: Event)
 
         let folders = await fs.promises.readdir(DATA_PATH)
         let files = (await Promise.all(folders
-            .map(async folder =>
-            {
-                return (await fs.promises.readdir(DATA_PATH + folder))
-                    .filter(name => name.endsWith(".txt"))
-                    .map(name => folder + "/" + name)
-            })))
+            .map(async folder => (await fs.promises.readdir(DATA_PATH + folder))
+                .filter(name => name.endsWith(".txt"))
+                .map(name => folder + "/" + name)
+            )))
             .reduce((acc, current) => [...acc, ...current])
 
         let data = await Promise.all(files.map(async name =>
