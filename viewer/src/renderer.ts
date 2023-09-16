@@ -1,51 +1,90 @@
 import fs from "fs"
 import { DATA_PATH } from "./env"
 
-const RENDER_HEIGHT = 100
-const OFFSET = 0.25
+const FILES_PER_PAGE = 5
+
+const RENDER_HEIGHT: number = 100
+const OFFSET: number = 0.25
+
+const HOUR: number = 60 * 60 * 1000
+
+let files!: [string, Date][]
+let pages: HTMLSpanElement[] = []
 
 main()
 async function main()
 {
-    // Sort files based on date
-    let fileData = (await fs.promises.readdir(DATA_PATH))
-        .filter(name => name.endsWith(".wav"))
-        .map(name => [name, toJSDate(name.slice(0, -4))] as [string, Date])
-
-    // Filter based on parameters
+    // Calculate min and max times from inputs
     let params = new URLSearchParams(window.location.search)
-    if (params.get("start"))
-        fileData = fileData.filter(([_, date]) => date.getTime() > parseInt(params.get("start")!))
-    if (params.get("end"))
-        fileData = fileData.filter(([_, date]) => date.getTime() < parseInt(params.get("end")!))
 
-    let renders = await Promise.all(fileData
-        .sort((a, b) => b[1].getTime() - a[1].getTime())
+    let min = parseInt(params.get("date")!) + parseInt(params.get("time")!) * HOUR
+    let max = min + HOUR
+
+    let folders = await fs.promises.readdir(DATA_PATH)
+    files = (await Promise.all(folders
+        .map(async folder => (await fs.promises.readdir(DATA_PATH + folder))
+            .filter(name => name.endsWith(".wav"))
+            .map(name =>
+            [
+                folder + "/" + name,
+                new Date(folder.split(" ")[0] + "T" + name.slice(0, -11).replaceAll(".", ":"))
+            ] as [string, Date])
+            .filter(([_, date]) =>
+            {
+                let time = date.getTime()
+                return time >= min && time < max
+            }))))
+        .reduce((acc, current) => [...acc, ...current])
+        .sort((a, b) => b[1].getTime() - a[1].getTime()) // Sort files based on date
+
+    // Generate pagination data
+    let pageContainer = document.querySelector("#pages")!
+    let count = Math.floor(files.length / FILES_PER_PAGE)
+
+    for (let i = 0; i < count; i++)
+    {
+        let span = document.createElement("span")
+        span.innerText = (i + 1).toString()
+
+        span.addEventListener("mousedown", () => setActive(i))
+
+        pageContainer.appendChild(span)
+        pages.push(span)
+    }
+    setActive(0)
+}
+
+async function setActive(page: number)
+{
+    for (let page of pages) page.classList.remove("active")
+    pages[page].classList.add("active")
+
+    // Clear existing files
+    let content = document.querySelector("#content") as HTMLDivElement
+    while (content.lastElementChild !== null) content.removeChild(content.lastElementChild)
+
+    let loading = document.createElement("p")
+    loading.innerText = "Loading..."
+    content.appendChild(loading)
+
+    // Render files
+    let start = page * FILES_PER_PAGE
+    let renders = await Promise.all(files
+        .slice(start, start + FILES_PER_PAGE)
         .map(file => file[0])
         .map(async name =>
         {
             let data = fs.promises.readFile(DATA_PATH + name)
-            let transcriptPromise = fs.promises.readFile(DATA_PATH + name.slice(0, -4) + ".txt", "utf-8")
 
             let transcription: string
-            try { transcription = await transcriptPromise }
+            try { transcription = await fs.promises.readFile(DATA_PATH + name.slice(0, -4) + ".txt", "utf-8") }
             catch (e) { transcription = "[no transcription]" }
-    
+
             return await renderBufferData(await data, name.slice(0, -4), transcription)
         }))
-        
-    document.body.removeChild(document.querySelector("#loading") as HTMLParagraphElement)
-    for (let render of renders) document.body.appendChild(render)
-}
 
-function toJSDate(string: string): Date
-{
-    let i = string.lastIndexOf(".")
-    string = string
-        .replace(" ", "T")
-        .replaceAll(".", ":")
-
-    return new Date(string.substring(0, i) + "." + string.substring(i + 1))
+    content.removeChild(content.lastElementChild!)
+    for (let render of renders) content.appendChild(render)
 }
 
 async function renderBufferData(data: Buffer, name: string, transcription: string):

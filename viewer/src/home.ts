@@ -2,25 +2,39 @@ import fs from "fs"
 import FuzzySearch from "fuzzy-search"
 import { DATA_PATH } from "./env"
 
+let date: HTMLInputElement = document.querySelector("#date") as HTMLInputElement
+let time: HTMLInputElement = document.querySelector("#time") as HTMLInputElement
+
 main()
 async function main()
 {
+    // Initialize date and time values in input
+    date.valueAsDate = new Date()
+    time.valueAsNumber = new Date().getHours()
+
+    // Register submission events
     let filter = document.querySelector("#filter") as HTMLFormElement
     filter.addEventListener("submit", onSubmitFilter)
 
     let search = document.querySelector("#search") as HTMLFormElement
     search.addEventListener("submit", onSubmitSearch)
 
-    let dates = Object.entries((await fs.promises.readdir(DATA_PATH))
-        .filter(name => name.endsWith(".wav"))
-        .map(name => Date.parse(name.split(" ")[0] + "T00:00:00"))
-        .reduce((acc, date) => (acc[date] ? acc[date]++ : acc[date] = 1, acc), {} as { [key: number]: number }))
-        .map(([date, count]) => [new Date(parseInt(date)), count] as [Date, number])
-        .sort((a, b) => b[0].getTime() - a[0].getTime())
+    // Generate overview data
+    let folders = await fs.promises.readdir(DATA_PATH)
+    let dates = (await Promise.all(folders
+        .map(async folder =>
+        {
+            // Count number of audio files in the folders for each day
+            let files = await fs.promises.readdir(DATA_PATH + folder)
+            return [
+                new Date(folder.split(" ")[0] + "T00:00:00"),
+                files.filter(name => name.endsWith(".wav")).length
+            ] as [Date, number]
+        })))
         .map(([date, count]) =>
         {
+            // Generate HTML elements
             let p = document.createElement("p")
-            
             p.innerText = date.toDateString() + ": " + count + " recording"
             if (count !== 1) p.innerText += "s"
             
@@ -33,24 +47,20 @@ async function main()
 
 function onSubmitFilter(e: Event)
 {
+    // Switch to filter page along with parameters
     e.preventDefault()
-
-    let start = document.querySelector("#start") as HTMLInputElement
-    let end = document.querySelector("#end") as HTMLInputElement
-
     let params = new URLSearchParams()
-    if (start.valueAsDate) params.append("start", toLocalDate(start.valueAsDate).getTime().toString())
-    if (end.valueAsDate)
-    {
-        let date = toLocalDate(end.valueAsDate)
-        date.setDate(date.getDate() + 1)
 
-        params.append("end", date.getTime().toString())
-    }
+    let d = new Date(date.valueAsDate!.toLocaleDateString())
+    d.setDate(d.getDate() + 1) // For some reason the input gives back the day before, so the day has to be shifted
+
+    params.append("date", d.getTime().toString())
+    params.append("time", time.value)
 
     window.location.href = "./index.html?" + params
 }
 
+// TODO: Fix search system
 let data: { name: string, transcript: string }[] | null = null
 async function onSubmitSearch(e: Event)
 {
@@ -87,12 +97,4 @@ async function onSubmitSearch(e: Event)
         })
     
     results.replaceChildren(...result)
-}
-
-function toLocalDate(date: Date): Date
-{
-    date = new Date(date.toLocaleDateString())
-    date.setDate(date.getDate() + 1)
-
-    return date
 }

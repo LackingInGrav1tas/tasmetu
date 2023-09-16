@@ -11,21 +11,18 @@
     <div class="main">
         <div class="forms">
             <form id="search">
-                <h2>Search</h2>
+                <h2>Search transcripts</h2>
                 <input type="text" id="query">
                 <input type="submit" value="Search">
                 <div id="search-results"></div>
             </form>
-        
             <form id="filter">
-                <h2>Filter by date</h2>
-                <span>Leaving a field blank disables the filter</span>
-                <br><br>
-                <h3>Start</h3>
-                <input type="date" id="start">
-                <h3>End</h3>
-                <input type="date" id="end">
-                <br><br>
+                <h2>Filter by date and time</h2>
+                <h3>Date</h3>
+                <input type="date" id="date">
+                <h3>Time (24 hr)</h3>
+                <input type="number" min="0" max="23" step="1" id="time">
+                <br>
                 <input type="submit" value="View recordings">
             </form>
         </div>
