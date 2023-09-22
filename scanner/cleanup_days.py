@@ -8,12 +8,17 @@ def date_difference(p):
     return delta.days
 
 while True:
-    path = 'g:/My Drive/tasmetu-archive'
-    dirs = [x[0] for x in os.walk(path)]
-    dirs.pop(0)
-    for dir in dirs:
-        n = dir.split('g:/My Drive/tasmetu-archive')[1][1:-1]
-        if date_difference(n) > 5:
-            shutil.rmtree(dir, ignore_errors=True)
-    print("cycle")
-    time.sleep(100)
+    try:
+        path = 'g:/My Drive/tasmetu-archive'
+        dirs = [x[0] for x in os.walk(path)]
+        dirs.pop(0)
+        for dir in dirs:
+            n = dir.split('g:/My Drive/tasmetu-archive')[1][1:-1]
+            print(date_difference(n))
+            if date_difference(n) > 2:
+                print(f"removing {dir}")
+                shutil.rmtree(dir, ignore_errors=True)
+        print("cycle")
+        time.sleep(100)
+    except:
+        continue

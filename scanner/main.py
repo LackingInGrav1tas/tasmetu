@@ -23,10 +23,11 @@ def save(audio_file):
     os.remove("noise-profile.prof")
     os.rename(audio_file.replace("day)/", "day)/F-"), audio_file)
 
-    f = open(audio_file.replace('wav', 'txt'), 'a')
     transcription = transcribe(audio_file)
-    f.write(transcription)
-    f.close()
+    if "unrecognized" not in transcription:
+        f = open(audio_file.replace('wav', 'txt'), 'a')
+        f.write(transcription)
+        f.close()
 
     os.system('compact /c /q /i "file'.replace("file", audio_file))
     if 'stop program' in transcription: return True
@@ -65,8 +66,12 @@ def name():
     return path + '/' + str(dt.time()).replace(':', '.') + '.wav'
 
 if __name__ == "__main__":
-    asc = AudioScanner(chunk=1024, format=pyaudio.paInt16, channels=1, rate=44100, threshold=300, silence=150)
-    if (len(sys.argv) >= 2 and sys.argv[1] != "nograph") or len(sys.argv) == 1: asc.begin_visualization()
-    asc.onReceive(save, name)
-    asc.listen()
-    del asc
+    while True:
+        try:
+            asc = AudioScanner(chunk=1024, format=pyaudio.paInt16, channels=1, rate=44100, threshold=300, silence=150)
+            if (len(sys.argv) >= 2 and sys.argv[1] != "nograph") or len(sys.argv) == 1: asc.begin_visualization()
+            asc.onReceive(save, name)
+            asc.listen()
+            del asc
+        except:
+            pass
